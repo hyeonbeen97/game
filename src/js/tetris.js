@@ -267,22 +267,31 @@ function tetris() {
         checkMatch();
     }
     function checkMatch() {
-        const childNodes = tetrisView.childNodes;
+        const childNodes = Array.from(tetrisView.childNodes);
         childNodes.forEach((child) => {
             let matched = true;
-            child.children[0].childNodes.forEach((li) => {
+            child.childNodes[0].childNodes.forEach((li) => {
                 if (!li.classList.contains("seized")) {
                     matched = false;
                 }
             });
             if (matched) {
                 child.remove();
-                newLine();
-                score++;
-                scoreDisplay.innerText = score;
             }
         });
+        const emptyLinesCount = line_rows - tetrisView.childElementCount;
+        for (let i = 0; i < emptyLinesCount; i++) {
+            const li = document.createElement("li");
+            const ul = document.createElement("ul");
+            for (let j = 0; j < line_cols; j++) {
+                const subLi = document.createElement("li");
+                ul.prepend(subLi);
+            }
+            li.prepend(ul);
+            tetrisView.prepend(li);
+        }
         generateNewBlock();
+        checkGameOver();
     }
     function generateNewBlock() {
         clearInterval(downInterval);
@@ -317,6 +326,7 @@ function tetris() {
             : (tempMovingItem.direction += 1);
         renderBlocks();
     }
+
     // 스페이스바 누르기
     function dropBlock() {
         clearInterval(downInterval);
@@ -324,6 +334,49 @@ function tetris() {
             moveBlock("top", 1);
         }, 10);
     }
+    // 게임 스타트
+    function gameStart() {
+        stopGame = false;
+        tetrisStart.style.display = "none";
+        tetrisTitle.style.display = "block";
+        tetrisPlay.style.display = "block";
+        tetrisText.style.display = "block";
+        tetrisMethod.style.display = "block";
+        generateNewBlock();
+        renderBlocks();
+        setTime();
+    }
+
+    function gameReset() {
+        clearInterval(setGameTime);
+        score = 0;
+        time = 0;
+        stopGame = true;
+        tetrisTime.innerText = time;
+        scoreDisplay.innerText = score;
+
+        const tetrisMinos = document.querySelectorAll(
+            ".tetris__play .view ul li ul li"
+        );
+        tetrisMinos.forEach((minos) => {
+            minos.className = "";
+        });
+    }
+
+    document
+        .querySelector(".tetris__result button")
+        .addEventListener("click", () => {
+            tetrisStart.style.display = "block";
+            tetrisResult.style.display = "none";
+            gameReset();
+        });
+
+    document
+        .querySelector(".tetris__start button")
+        .addEventListener("click", () => {
+            gameStart();
+        });
+
     document.addEventListener("keydown", (e) => {
         switch (e.keyCode) {
             case 39:
@@ -345,6 +398,7 @@ function tetris() {
                 break;
         }
     });
+
     init();
 }
 export default tetris;
